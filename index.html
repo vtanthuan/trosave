@@ -1,171 +1,638 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Trọ Save </title>
-  <style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trọ Save - Nền tảng tìm bạn trọ thông minh</title>
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<script>tailwind.config={theme:{extend:{colors:{primary:'#4F46E5',secondary:'#F59E0B'},borderRadius:{'none':'0px','sm':'4px',DEFAULT:'8px','md':'12px','lg':'16px','xl':'20px','2xl':'24px','3xl':'32px','full':'9999px','button':'8px'}}}}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
+<style>
+:where([class^="ri-"])::before { content: "\f3c2"; }
 body {
-  font-family: Arial, sans-serif;
-  background: #f0f4f8;
-  margin: 0;
-  padding: 20px;
+font-family: 'Inter', sans-serif;
 }
-    .container {
-      max-width: 700px;
-      margin: auto;
-      background: #fff;
-      padding: 30px;
-      border-radius: 16px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-    }
-    h1 {
-      text-align: center;
-      color: #1877f2;
-    }
-    label {
-      display: block;
-      margin-top: 20px;
-      font-weight: bold;
-    }
-    input, select {
-      width: 100%;
-      padding: 12px;
-      margin-top: 8px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 16px;
-    }
-    button {
-      margin-top: 24px;
-      width: 100%;
-      background-color: #1877f2;
-      color: white;
-      border: none;
-      padding: 14px;
-      font-size: 16px;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-    #result {
-      margin-top: 24px;
-      font-size: 18px;
-      text-align: center;
-      color: #333;
-    }
-    .listing {
-      margin-top: 30px;
-    }
-    .room-card {
-      border: 1px solid #ddd;
-      border-radius: 12px;
-      padding: 16px;
-      margin-bottom: 20px;
-      background-color: #fafafa;
-    }
-    .room-title {
-      font-weight: bold;
-      font-size: 18px;
-      margin-bottom: 8px;
-    }
-    .room-info {
-      font-size: 15px;
-      color: #555;
-    }
-    .map {
-      margin-top: 20px;
-      width: 100%;
-      height: 350px;
-      border: none;
-      border-radius: 12px;
-    }
-  </style>
+.hide-scrollbar::-webkit-scrollbar {
+display: none;
+}
+.hide-scrollbar {
+-ms-overflow-style: none;
+scrollbar-width: none;
+}
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+-webkit-appearance: none;
+margin: 0;
+}
+input[type="number"] {
+-moz-appearance: textfield;
+}
+</style>
 </head>
-<body>
-  <div class="container">
-    <h1>Trọ Save </h1>
-    <label for="income">Thu nhập hàng tháng của bạn (VNĐ):</label>
-    <input type="number" id="income" placeholder="Ví dụ: 5000000">
-
-    <label for="location">Khu vực muốn thuê:</label>
-    <select id="location">
-      <option value="BinhThanh">Quận Bình Thạnh</option>
-      <option value="ThuDuc">TP Thủ Đức</option>
-      <option value="TanPhu">Quận Tân Phú</option>
-    </select>
-
-    <button onclick="suggestPrice()">Gợi ý phòng phù hợp</button>
-
-    <div id="result"></div>
-    <div class="listing" id="listing"></div>
-
-    <iframe id="map" class="map" src="https://maps.google.com/maps?q=TPHCM&t=&z=13&ie=UTF8&iwloc=&output=embed" loading="lazy"></iframe>
-  </div>
-
-  <script>
-    const averagePrices = {
-      BinhThanh: 3500000,
-      ThuDuc: 3000000,
-      TanPhu: 2700000
-    };
-
-    const sampleRooms = {
-      BinhThanh: [
-        { title: "Phòng 20m² gần ĐH HUTECH", price: 3400000, utilities: "Có máy lạnh, wifi, WC riêng" },
-        { title: "Phòng nhỏ hẻm Xô Viết Nghệ Tĩnh", price: 2900000, utilities: "Có gác, wifi" }
-      ],
-      ThuDuc: [
-        { title: "Phòng 18m² gần ĐH Quốc Gia", price: 2800000, utilities: "Có bếp, máy giặt chung" },
-        { title: "Phòng đẹp ở Linh Trung", price: 3100000, utilities: "Có nội thất cơ bản" }
-      ],
-      TanPhu: [
-        { title: "Phòng giá rẻ gần ĐH Công nghiệp Thực phẩm", price: 2600000, utilities: "Có ban công, WC riêng" },
-        { title: "Phòng tiện nghi đường Lũy Bán Bích", price: 2900000, utilities: "Có máy lạnh, chỗ để xe" }
-      ]
-    };
-
-    const mapUrls = {
-      BinhThanh: "https://maps.google.com/maps?q=Binh%20Thanh%20Ho%20Chi%20Minh&t=&z=15&ie=UTF8&iwloc=&output=embed",
-      ThuDuc: "https://maps.google.com/maps?q=Thu%20Duc%20Ho%20Chi%20Minh&t=&z=15&ie=UTF8&iwloc=&output=embed",
-      TanPhu: "https://maps.google.com/maps?q=Tan%20Phu%20Ho%20Chi%20Minh&t=&z=15&ie=UTF8&iwloc=&output=embed"
-    };
-
-    function suggestPrice() {
-      const income = parseInt(document.getElementById("income").value);
-      const location = document.getElementById("location").value;
-      const resultDiv = document.getElementById("result");
-      const listingDiv = document.getElementById("listing");
-      const mapFrame = document.getElementById("map");
-      listingDiv.innerHTML = "";
-
-      if (isNaN(income) || income <= 0) {
-        resultDiv.textContent = "Vui lòng nhập thu nhập hợp lệ.";
-        return;
-      }
-
-      const maxBudget = income * 0.35;
-      const avgPrice = averagePrices[location];
-
-      if (avgPrice <= maxBudget) {
-        resultDiv.textContent = `✅ Khu vực này phù hợp với tài chính của bạn. Giá trung bình: ${avgPrice.toLocaleString()} VNĐ/tháng.`;
-      } else {
-        resultDiv.textContent = `⚠️ Khu vực này có thể vượt ngân sách. Giá trung bình: ${avgPrice.toLocaleString()} VNĐ/tháng. Bạn nên cân nhắc hoặc chọn khu khác.`;
-      }
-
-      mapFrame.src = mapUrls[location];
-
-      const rooms = sampleRooms[location];
-      rooms.forEach(room => {
-        const div = document.createElement("div");
-        div.className = "room-card";
-        div.innerHTML = `
-          <div class="room-title">${room.title}</div>
-          <div class="room-info">Giá: ${room.price.toLocaleString()} VNĐ/tháng</div>
-          <div class="room-info">Tiện ích: ${room.utilities}</div>
-        `;
-        listingDiv.appendChild(div);
-      });
-    }
-  </script>
+<body class="bg-gray-50">
+<!-- Nav Bar -->
+<nav class="fixed top-0 w-full bg-white shadow-sm z-50 px-4 py-3 flex items-center justify-between">
+<div class="flex items-center">
+<span class="text-2xl font-['Pacifico'] text-primary">Trọ Save VHU</span>
+</div>
+<div class="flex items-center space-x-3">
+<button class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100">
+<i class="ri-notification-3-line text-gray-600"></i>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100">
+<i class="ri-user-line text-gray-600"></i>
+</button>
+</div>
+</nav>
+<!-- Main Content -->
+<main class="pt-16 pb-20">
+<!-- Roommate Matching Section -->
+<section id="roommate-section" class="px-4 py-5">
+<div class="mb-5">
+<h2 class="text-xl font-semibold text-gray-800">Tìm bạn trọ</h2>
+<p class="text-sm text-gray-500">Tìm người phù hợp để ở ghép cùng</p>
+</div>
+<!-- Search Bar -->
+<div class="relative mb-5">
+<input type="text" placeholder="Tìm theo tên, trường học..." class="w-full py-3 pl-10 pr-4 bg-white border-none rounded-lg shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+<div class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 flex items-center justify-center">
+<i class="ri-search-line text-gray-400"></i>
+</div>
+<button class="absolute right-3 top-1/2 transform -translate-y-1/2 w-6 h-6 flex items-center justify-center bg-gray-100 rounded-full">
+<i class="ri-equalizer-line text-gray-500 text-sm"></i>
+</button>
+</div>
+<!-- Filter Tags -->
+<div class="flex gap-2 mb-5 overflow-x-auto hide-scrollbar">
+<button class="px-3 py-1.5 bg-primary text-white rounded-full text-xs whitespace-nowrap !rounded-button">
+Tất cả
+</button>
+<button class="px-3 py-1.5 bg-white text-gray-700 rounded-full text-xs whitespace-nowrap border border-gray-200 !rounded-button">
+Nữ
+</button>
+<button class="px-3 py-1.5 bg-white text-gray-700 rounded-full text-xs whitespace-nowrap border border-gray-200 !rounded-button">
+Nam
+</button>
+<button class="px-3 py-1.5 bg-white text-gray-700 rounded-full text-xs whitespace-nowrap border border-gray-200 !rounded-button">
+Đại học Văn Hiến
+</button>
+</div>
+<!-- Roommate Cards -->
+<div class="space-y-4">
+<!-- Card 1 -->
+<div class="bg-white rounded-lg shadow-sm p-4">
+<div class="flex items-start gap-3">
+<img src="https://readdy.ai/api/search-image?query=young%20Vietnamese%20female%20student%2C%20university%20student%2C%20smiling%2C%20casual%20outfit%2C%20natural%20lighting%2C%20front%20facing%20portrait%2C%20friendly%20expression%2C%20simple%20background&width=80&height=80&seq=1&orientation=squarish" alt="Avatar" class="w-16 h-16 rounded-full object-cover">
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="font-medium text-gray-800">Nguyễn Thị Minh Anh</h3>
+<p class="text-xs text-gray-500">Đại học Văn Hiến • 20 tuổi</p>
+</div>
+<span class="px-2 py-1 bg-green-50 text-green-600 rounded-full text-xs">Online</span>
+</div>
+<div class="mt-2 flex flex-wrap gap-1">
+<span class="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs">Không hút thuốc</span>
+<span class="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs">Ngủ sớm</span>
+<span class="px-2 py-0.5 bg-purple-100 text-purple-600 rounded-full text-xs">2-3 triệu/tháng</span>
+</div>
+<div class="mt-3 flex justify-between items-center">
+<span class="text-xs text-gray-500">Khu vực: Quận 5</span>
+<button class="px-3 py-1.5 bg-primary text-white rounded-lg text-xs font-medium !rounded-button cursor-pointer">
+Nhắn tin
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-white rounded-lg shadow-sm p-4">
+<div class="flex items-start gap-3">
+<img src="https://readdy.ai/api/search-image?query=young%20Vietnamese%20female%20student%2C%20university%20student%2C%20smiling%2C%20casual%20outfit%2C%20natural%20lighting%2C%20front%20facing%20portrait%2C%20friendly%20expression%2C%20simple%20background&width=80&height=80&seq=2&orientation=squarish" alt="Avatar" class="w-16 h-16 rounded-full object-cover">
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="font-medium text-gray-800">Trần Thị Bích Trâm</h3>
+<p class="text-xs text-gray-500">Đại học Văn Hiến • 21 tuổi</p>
+</div>
+<span class="px-2 py-1 bg-gray-100 text-gray-500 rounded-full text-xs">1 giờ trước</span>
+</div>
+<div class="mt-2 flex flex-wrap gap-1">
+<span class="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs">Sạch sẽ</span>
+<span class="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs">Thích nấu ăn</span>
+<span class="px-2 py-0.5 bg-purple-100 text-purple-600 rounded-full text-xs">2.5-3 triệu/tháng</span>
+</div>
+<div class="mt-3 flex justify-between items-center">
+<span class="text-xs text-gray-500">Khu vực: Quận 5</span>
+<button class="px-3 py-1.5 bg-primary text-white rounded-lg text-xs font-medium !rounded-button cursor-pointer">
+Nhắn tin
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="bg-white rounded-lg shadow-sm p-4">
+<div class="flex items-start gap-3">
+<img src="https://readdy.ai/api/search-image?query=young%20Vietnamese%20male%20student%2C%20university%20student%2C%20smiling%2C%20casual%20outfit%2C%20natural%20lighting%2C%20front%20facing%20portrait%2C%20friendly%20expression%2C%20simple%20background&width=80&height=80&seq=3&orientation=squarish" alt="Avatar" class="w-16 h-16 rounded-full object-cover">
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="font-medium text-gray-800">Phạm Hoàng Nam</h3>
+<p class="text-xs text-gray-500">Đại học Văn Hiến • 19 tuổi</p>
+</div>
+<span class="px-2 py-1 bg-gray-100 text-gray-500 rounded-full text-xs">2 giờ trước</span>
+</div>
+<div class="mt-2 flex flex-wrap gap-1">
+<span class="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs">Yên tĩnh</span>
+<span class="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs">Không hút thuốc</span>
+<span class="px-2 py-0.5 bg-purple-100 text-purple-600 rounded-full text-xs">2-2.5 triệu/tháng</span>
+</div>
+<div class="mt-3 flex justify-between items-center">
+<span class="text-xs text-gray-500">Khu vực: Quận 5</span>
+<button class="px-3 py-1.5 bg-primary text-white rounded-lg text-xs font-medium !rounded-button cursor-pointer">
+Nhắn tin
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- AI Room Pricing Section -->
+<section id="pricing-section" class="hidden px-4 py-5">
+<div class="mb-5">
+<h2 class="text-xl font-semibold text-gray-800">Định giá phòng trọ AI</h2>
+<p class="text-sm text-gray-500">Nhận giá đề xuất dựa trên khoảng cách đến trường</p>
+<div class="mt-4">
+<label class="block text-sm text-gray-600 mb-2">Chọn cơ sở trường</label>
+<div class="relative">
+<select id="campus-select" class="w-full p-3 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary appearance-none cursor-pointer">
+<option value="hungHau1">Hung Hau Campus - 624 Âu Cơ, P.10, Q.Tân Bình</option>
+<option value="hungHau2">Hung Hau Campus - Đại lộ Nguyễn Văn Linh</option>
+<option value="campus8">Cơ sở 8 - 14 Nguyễn Bá Tuyển, P.12, Q.Tân Bình</option>
+</select>
+<div class="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 flex items-center justify-center pointer-events-none">
+<i class="ri-arrow-down-s-line text-gray-500"></i>
+</div>
+</div>
+</div>
+</div>
+<!-- Location Input -->
+<div class="bg-white rounded-lg shadow-sm p-4 mb-4">
+<h3 class="font-medium text-gray-700 mb-3">Vị trí phòng trọ</h3>
+<div class="space-y-3">
+<div class="mb-3">
+<label class="block text-sm text-gray-600 mb-1">Địa chỉ phòng trọ</label>
+<input type="text" placeholder="Nhập địa chỉ phòng trọ của bạn" class="w-full p-3 bg-gray-50 border-none rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+</div>
+<div class="grid grid-cols-2 gap-3">
+<div>
+<label class="block text-sm text-gray-600 mb-1">Quận/Huyện</label>
+<div class="relative">
+<select class="w-full p-3 bg-gray-50 border-none rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary appearance-none cursor-pointer">
+<option value="">Chọn Quận/Huyện</option>
+<option>Quận Tân Bình</option>
+<option>Quận Bình Tân</option>
+<option>Quận 7</option>
+<option>Quận 8</option>
+<option>Quận Bình Thạnh</option>
+</select>
+<div class="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 flex items-center justify-center pointer-events-none">
+<i class="ri-arrow-down-s-line text-gray-500"></i>
+</div>
+</div>
+</div>
+<div>
+<label class="block text-sm text-gray-600 mb-1">Phường/Xã</label>
+<div class="relative">
+<select class="w-full p-3 bg-gray-50 border-none rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary appearance-none cursor-pointer">
+<option value="">Chọn Phường/Xã</option>
+<option>Phường 10</option>
+<option>Phường 11</option>
+<option>Phường 12</option>
+<option>Phường 13</option>
+<option>Phường 14</option>
+</select>
+<div class="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 flex items-center justify-center pointer-events-none">
+<i class="ri-arrow-down-s-line text-gray-500"></i>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Map Preview -->
+<div class="w-full h-40 bg-cover bg-center rounded-lg overflow-hidden mb-3" style="background-image: url('https://public.readdy.ai/gen_page/map_placeholder_1280x720.png')"></div>
+<div class="grid grid-cols-2 gap-3">
+<div>
+<label class="block text-sm text-gray-600 mb-1">Khoảng cách đến trường</label>
+<div class="relative">
+<input type="number" placeholder="0" class="w-full p-3 bg-gray-50 border-none rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary pl-3 pr-12">
+<span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-500">km</span>
+</div>
+</div>
+<div>
+<label class="block text-sm text-gray-600 mb-1">Khoảng cách đến chợ</label>
+<div class="relative">
+<input type="number" placeholder="0" class="w-full p-3 bg-gray-50 border-none rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary pl-3 pr-12">
+<span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-500">km</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Room Details -->
+<div class="bg-white rounded-lg shadow-sm p-4 mb-4">
+<h3 class="font-medium text-gray-700 mb-3">Thông tin phòng</h3>
+<div class="grid grid-cols-2 gap-3 mb-3">
+<div>
+<label class="block text-sm text-gray-600 mb-1">Diện tích</label>
+<div class="relative">
+<input type="number" placeholder="0" class="w-full p-3 bg-gray-50 border-none rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary pl-3 pr-12">
+<span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-500">m²</span>
+</div>
+</div>
+<div>
+<label class="block text-sm text-gray-600 mb-1">Số người ở tối đa</label>
+<input type="number" placeholder="1" class="w-full p-3 bg-gray-50 border-none rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+</div>
+</div>
+<h3 class="font-medium text-gray-700 mb-2">Tiện ích</h3>
+<div class="grid grid-cols-2 gap-2">
+<label class="flex items-center space-x-2 p-2 bg-gray-50 rounded-lg">
+<input type="checkbox" class="w-4 h-4 accent-primary">
+<span class="text-sm text-gray-700">Máy lạnh</span>
+</label>
+<label class="flex items-center space-x-2 p-2 bg-gray-50 rounded-lg">
+<input type="checkbox" class="w-4 h-4 accent-primary">
+<span class="text-sm text-gray-700">Wifi miễn phí</span>
+</label>
+<label class="flex items-center space-x-2 p-2 bg-gray-50 rounded-lg">
+<input type="checkbox" class="w-4 h-4 accent-primary">
+<span class="text-sm text-gray-700">Nhà vệ sinh riêng</span>
+</label>
+<label class="flex items-center space-x-2 p-2 bg-gray-50 rounded-lg">
+<input type="checkbox" class="w-4 h-4 accent-primary">
+<span class="text-sm text-gray-700">Bảo vệ 24/7</span>
+</label>
+<label class="flex items-center space-x-2 p-2 bg-gray-50 rounded-lg">
+<input type="checkbox" class="w-4 h-4 accent-primary">
+<span class="text-sm text-gray-700">Chỗ để xe</span>
+</label>
+<label class="flex items-center space-x-2 p-2 bg-gray-50 rounded-lg">
+<input type="checkbox" class="w-4 h-4 accent-primary">
+<span class="text-sm text-gray-700">Tự do giờ giấc</span>
+</label>
+</div>
+</div>
+<!-- Action Button -->
+<button class="w-full py-3 bg-primary text-white font-medium rounded-lg mb-5 !rounded-button cursor-pointer">
+Định giá ngay
+</button>
+<!-- Result Card (Initially Hidden) -->
+<div class="bg-white rounded-lg shadow-sm p-4 mb-4">
+<div class="flex justify-between items-center mb-4">
+<h3 class="font-medium text-gray-700">Kết quả định giá</h3>
+<span class="text-xs text-gray-500">30/06/2025</span>
+</div>
+<div class="bg-primary/10 rounded-lg p-4 mb-4 text-center">
+<p class="text-sm text-gray-600 mb-1">Giá đề xuất</p>
+<h2 class="text-2xl font-bold text-primary">3.200.000 đ<span class="text-sm font-normal text-gray-500">/tháng</span></h2>
+<p class="text-xs text-gray-500 mt-1">Dựa trên 28 phòng tương tự trong khu vực</p>
+</div>
+<!-- Price Chart -->
+<div id="price-chart" class="w-full h-48 mb-4"></div>
+<!-- Similar Rooms -->
+<h3 class="font-medium text-gray-700 mb-3">Phòng tham khảo gần đó</h3>
+<div class="space-y-3">
+<div class="flex gap-3 p-2 bg-gray-50 rounded-lg">
+<img src="https://readdy.ai/api/search-image?query=Vietnamese%20studio%20apartment%2C%20clean%20interior%2C%20small%20bedroom%2C%20natural%20lighting%2C%20simple%20furniture%2C%20student%20accommodation&width=60&height=60&seq=4&orientation=squarish" alt="Room" class="w-15 h-15 rounded-md object-cover">
+<div>
+<h4 class="text-sm font-medium text-gray-700">Phòng trọ Thủ Đức</h4>
+<p class="text-xs text-gray-500">20m² • Có máy lạnh, WC riêng</p>
+<p class="text-sm font-medium text-primary">3.000.000 đ/tháng</p>
+</div>
+</div>
+<div class="flex gap-3 p-2 bg-gray-50 rounded-lg">
+<img src="https://readdy.ai/api/search-image?query=Vietnamese%20studio%20apartment%2C%20clean%20interior%2C%20small%20bedroom%2C%20natural%20lighting%2C%20simple%20furniture%2C%20student%20accommodation&width=60&height=60&seq=5&orientation=squarish" alt="Room" class="w-15 h-15 rounded-md object-cover">
+<div>
+<h4 class="text-sm font-medium text-gray-700">Phòng trọ Quận 9</h4>
+<p class="text-xs text-gray-500">25m² • Có máy lạnh, WC riêng</p>
+<p class="text-sm font-medium text-primary">3.500.000 đ/tháng</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Cost Calculator Section -->
+<section id="calculator-section" class="hidden px-4 py-5">
+<div class="mb-5">
+<h2 class="text-xl font-semibold text-gray-800">Tính toán chi phí</h2>
+<p class="text-sm text-gray-500">Ước tính tổng chi phí hàng tháng của bạn</p>
+</div>
+<!-- Calculator Form -->
+<div class="bg-white rounded-lg shadow-sm p-4 mb-4">
+<h3 class="font-medium text-gray-700 mb-3">Chi phí cơ bản</h3>
+<div class="mb-3">
+<label class="block text-sm text-gray-600 mb-1">Giá thuê phòng</label>
+<div class="relative">
+<input type="number" placeholder="0" value="3200000" class="w-full p-3 bg-gray-50 border-none rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary pl-3 pr-12">
+<span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-500">đ/tháng</span>
+</div>
+</div>
+<div class="mb-3">
+<label class="block text-sm text-gray-600 mb-1">Tiền cọc (nếu có)</label>
+<div class="relative">
+<input type="number" placeholder="0" class="w-full p-3 bg-gray-50 border-none rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary pl-3 pr-12">
+<span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-500">đ</span>
+</div>
+</div>
+<h3 class="font-medium text-gray-700 mb-3 mt-5">Chi phí điện nước</h3>
+<div class="grid grid-cols-2 gap-3 mb-3">
+<div>
+<label class="block text-sm text-gray-600 mb-1">Số điện (kWh)</label>
+<div class="relative">
+<input type="number" placeholder="0" value="120" class="w-full p-3 bg-gray-50 border-none rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary pl-3 pr-12">
+<span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-500">kWh</span>
+</div>
+</div>
+<div>
+<label class="block text-sm text-gray-600 mb-1">Giá điện</label>
+<div class="relative">
+<input type="number" placeholder="0" value="3500" class="w-full p-3 bg-gray-50 border-none rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary pl-3 pr-12">
+<span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-500">đ/kWh</span>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-3 mb-3">
+<div>
+<label class="block text-sm text-gray-600 mb-1">Số nước (m³)</label>
+<div class="relative">
+<input type="number" placeholder="0" value="8" class="w-full p-3 bg-gray-50 border-none rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary pl-3 pr-12">
+<span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-500">m³</span>
+</div>
+</div>
+<div>
+<label class="block text-sm text-gray-600 mb-1">Giá nước</label>
+<div class="relative">
+<input type="number" placeholder="0" value="15000" class="w-full p-3 bg-gray-50 border-none rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary pl-3 pr-12">
+<span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-500">đ/m³</span>
+</div>
+</div>
+</div>
+<h3 class="font-medium text-gray-700 mb-3 mt-5">Chi phí khác</h3>
+<div class="mb-3">
+<label class="block text-sm text-gray-600 mb-1">Phí gửi xe</label>
+<div class="relative">
+<select class="w-full p-3 bg-gray-50 border-none rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary appearance-none">
+<option>Xe máy - 100.000đ/tháng</option>
+<option>Xe đạp - 50.000đ/tháng</option>
+<option>Không gửi xe</option>
+</select>
+<div class="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 flex items-center justify-center">
+<i class="ri-arrow-down-s-line text-gray-500"></i>
+</div>
+</div>
+</div>
+<div class="mb-3">
+<label class="block text-sm text-gray-600 mb-1">Internet</label>
+<div class="relative">
+<input type="number" placeholder="0" value="150000" class="w-full p-3 bg-gray-50 border-none rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary pl-3 pr-12">
+<span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-500">đ/tháng</span>
+</div>
+</div>
+<div class="mb-3">
+<label class="block text-sm text-gray-600 mb-1">Phí dịch vụ khác</label>
+<div class="relative">
+<input type="number" placeholder="0" value="50000" class="w-full p-3 bg-gray-50 border-none rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary pl-3 pr-12">
+<span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-500">đ/tháng</span>
+</div>
+</div>
+</div>
+<!-- Action Button -->
+<button class="w-full py-3 bg-primary text-white font-medium rounded-lg mb-5 !rounded-button cursor-pointer" id="calculate-btn">
+Tính toán chi phí
+</button>
+<!-- Result Card (Initially Hidden) -->
+<div class="bg-white rounded-lg shadow-sm p-4 mb-4" id="cost-result">
+<div class="flex justify-between items-center mb-4">
+<h3 class="font-medium text-gray-700">Kết quả tính toán</h3>
+<span class="text-xs text-gray-500">30/06/2025</span>
+</div>
+<div class="bg-primary/10 rounded-lg p-4 mb-4 text-center">
+<p class="text-sm text-gray-600 mb-1">Tổng chi phí hàng tháng</p>
+<h2 class="text-2xl font-bold text-primary">3.920.000 đ<span class="text-sm font-normal text-gray-500">/tháng</span></h2>
+</div>
+<!-- Cost Breakdown -->
+<h3 class="font-medium text-gray-700 mb-3">Chi tiết chi phí</h3>
+<div class="space-y-2 mb-4">
+<div class="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+<span class="text-sm text-gray-700">Tiền thuê phòng</span>
+<span class="text-sm font-medium text-gray-800">3.200.000 đ</span>
+</div>
+<div class="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+<span class="text-sm text-gray-700">Tiền điện (120 kWh)</span>
+<span class="text-sm font-medium text-gray-800">420.000 đ</span>
+</div>
+<div class="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+<span class="text-sm text-gray-700">Tiền nước (8 m³)</span>
+<span class="text-sm font-medium text-gray-800">120.000 đ</span>
+</div>
+<div class="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+<span class="text-sm text-gray-700">Phí gửi xe</span>
+<span class="text-sm font-medium text-gray-800">100.000 đ</span>
+</div>
+<div class="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+<span class="text-sm text-gray-700">Internet</span>
+<span class="text-sm font-medium text-gray-800">150.000 đ</span>
+</div>
+<div class="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+<span class="text-sm text-gray-700">Phí dịch vụ khác</span>
+<span class="text-sm font-medium text-gray-800">50.000 đ</span>
+</div>
+</div>
+<!-- Cost Chart -->
+<div id="cost-chart" class="w-full h-48"></div>
+</div>
+</section>
+</main>
+<!-- Tab Bar -->
+<div class="fixed bottom-0 w-full bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-50">
+<div class="grid grid-cols-3 h-16">
+<button class="flex flex-col items-center justify-center space-y-1 tab-btn active" data-target="roommate-section">
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="ri-user-search-line text-lg tab-icon"></i>
+</div>
+<span class="text-xs tab-text">Tìm bạn trọ</span>
+</button>
+<button class="flex flex-col items-center justify-center space-y-1 tab-btn" data-target="pricing-section">
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="ri-home-4-line text-lg tab-icon"></i>
+</div>
+<span class="text-xs tab-text">Định giá AI</span>
+</button>
+<button class="flex flex-col items-center justify-center space-y-1 tab-btn" data-target="calculator-section">
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="ri-calculator-line text-lg tab-icon"></i>
+</div>
+<span class="text-xs tab-text">Tính chi phí</span>
+</button>
+</div>
+</div>
+<!-- Floating Action Button -->
+<button class="fixed right-4 bottom-20 w-12 h-12 bg-primary rounded-full shadow-lg flex items-center justify-center cursor-pointer">
+<i class="ri-add-fill text-white text-xl"></i>
+</button>
+<!-- Scripts -->
+<script id="tab-navigation">
+document.addEventListener('DOMContentLoaded', function() {
+const tabBtns = document.querySelectorAll('.tab-btn');
+const sections = document.querySelectorAll('section');
+function setActiveTab(targetId) {
+// Hide all sections
+sections.forEach(section => {
+section.classList.add('hidden');
+});
+// Show target section
+document.getElementById(targetId).classList.remove('hidden');
+// Update tab styles
+tabBtns.forEach(btn => {
+const isActive = btn.dataset.target === targetId;
+btn.classList.toggle('active', isActive);
+// Update icon and text color
+const icon = btn.querySelector('.tab-icon');
+const text = btn.querySelector('.tab-text');
+if (isActive) {
+icon.classList.add('text-primary');
+text.classList.add('text-primary');
+icon.classList.remove('text-gray-500');
+text.classList.remove('text-gray-500');
+} else {
+icon.classList.remove('text-primary');
+text.classList.remove('text-primary');
+icon.classList.add('text-gray-500');
+text.classList.add('text-gray-500');
+}
+});
+}
+// Set initial active tab
+setActiveTab('roommate-section');
+// Add click event listeners
+tabBtns.forEach(btn => {
+btn.addEventListener('click', function() {
+setActiveTab(this.dataset.target);
+});
+});
+});
+</script>
+<script id="charts-initialization">
+document.addEventListener('DOMContentLoaded', function() {
+// Initialize Price Chart
+const priceChart = echarts.init(document.getElementById('price-chart'));
+const priceOption = {
+tooltip: {
+trigger: 'axis',
+formatter: '{b}: {c} triệu đồng'
+},
+xAxis: {
+type: 'category',
+data: ['Thấp nhất', 'Trung bình', 'Đề xuất', 'Cao nhất'],
+axisLabel: {
+fontSize: 10
+}
+},
+yAxis: {
+type: 'value',
+name: 'Triệu đồng',
+nameTextStyle: {
+fontSize: 10
+},
+axisLabel: {
+fontSize: 10
+}
+},
+series: [{
+data: [2.8, 3.1, 3.2, 3.6],
+type: 'bar',
+itemStyle: {
+color: function(params) {
+const colors = ['#94A3B8', '#94A3B8', '#4F46E5', '#94A3B8'];
+return colors[params.dataIndex];
+}
+}
+}]
+};
+priceChart.setOption(priceOption);
+// Initialize Cost Chart
+const costChart = echarts.init(document.getElementById('cost-chart'));
+const costOption = {
+tooltip: {
+trigger: 'item',
+formatter: '{b}: {c} đ ({d}%)'
+},
+legend: {
+orient: 'horizontal',
+bottom: 0,
+left: 'center',
+itemWidth: 10,
+itemHeight: 10,
+textStyle: {
+fontSize: 10
+}
+},
+series: [{
+type: 'pie',
+radius: ['40%', '70%'],
+avoidLabelOverlap: false,
+itemStyle: {
+borderRadius: 4,
+borderColor: '#fff',
+borderWidth: 2
+},
+label: {
+show: false
+},
+emphasis: {
+label: {
+show: false
+}
+},
+data: [
+{ value: 3200000, name: 'Thuê phòng', itemStyle: { color: '#4F46E5' } },
+{ value: 420000, name: 'Điện', itemStyle: { color: '#F59E0B' } },
+{ value: 120000, name: 'Nước', itemStyle: { color: '#10B981' } },
+{ value: 100000, name: 'Gửi xe', itemStyle: { color: '#6366F1' } },
+{ value: 150000, name: 'Internet', itemStyle: { color: '#EC4899' } },
+{ value: 50000, name: 'Khác', itemStyle: { color: '#8B5CF6' } }
+]
+}]
+};
+costChart.setOption(costOption);
+// Handle window resize
+window.addEventListener('resize', function() {
+priceChart.resize();
+costChart.resize();
+});
+});
+</script>
+<script id="calculator-functionality">
+document.addEventListener('DOMContentLoaded', function() {
+const calculateBtn = document.getElementById('calculate-btn');
+const costResult = document.getElementById('cost-result');
+calculateBtn.addEventListener('click', function() {
+// Show result section with animation
+costResult.style.display = 'block';
+costResult.scrollIntoView({ behavior: 'smooth' });
+// Recalculate chart (if needed)
+const costChart = echarts.getInstanceByDom(document.getElementById('cost-chart'));
+if (costChart) {
+costChart.resize();
+}
+});
+});
+</script>
 </body>
 </html>
