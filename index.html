@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trọ Save Lite</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f4f8;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 700px;
+      margin: auto;
+      background: #fff;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #1877f2;
+    }
+    label {
+      display: block;
+      margin-top: 20px;
+      font-weight: bold;
+    }
+    input, select {
+      width: 100%;
+      padding: 12px;
+      margin-top: 8px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+    button {
+      margin-top: 24px;
+      width: 100%;
+      background-color: #1877f2;
+      color: white;
+      border: none;
+      padding: 14px;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    #result {
+      margin-top: 24px;
+      font-size: 18px;
+      text-align: center;
+      color: #333;
+    }
+    .listing {
+      margin-top: 30px;
+    }
+    .room-card {
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 20px;
+      background-color: #fafafa;
+    }
+    .room-title {
+      font-weight: bold;
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+    .room-info {
+      font-size: 15px;
+      color: #555;
+    }
+    .map {
+      margin-top: 20px;
+      width: 100%;
+      height: 350px;
+      border: none;
+      border-radius: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Trọ Save Lite</h1>
+    <label for="income">Thu nhập hàng tháng của bạn (VNĐ):</label>
+    <input type="number" id="income" placeholder="Ví dụ: 5000000">
+
+    <label for="location">Khu vực muốn thuê:</label>
+    <select id="location">
+      <option value="BinhThanh">Quận Bình Thạnh</option>
+      <option value="ThuDuc">TP Thủ Đức</option>
+      <option value="TanPhu">Quận Tân Phú</option>
+    </select>
+
+    <button onclick="suggestPrice()">Gợi ý phòng phù hợp</button>
+
+    <div id="result"></div>
+    <div class="listing" id="listing"></div>
+
+    <iframe id="map" class="map" src="https://maps.google.com/maps?q=TPHCM&t=&z=13&ie=UTF8&iwloc=&output=embed" loading="lazy"></iframe>
+  </div>
+
+  <script>
+    const averagePrices = {
+      BinhThanh: 3500000,
+      ThuDuc: 3000000,
+      TanPhu: 2700000
+    };
+
+    const sampleRooms = {
+      BinhThanh: [
+        { title: "Phòng 20m² gần ĐH HUTECH", price: 3400000, utilities: "Có máy lạnh, wifi, WC riêng" },
+        { title: "Phòng nhỏ hẻm Xô Viết Nghệ Tĩnh", price: 2900000, utilities: "Có gác, wifi" }
+      ],
+      ThuDuc: [
+        { title: "Phòng 18m² gần ĐH Quốc Gia", price: 2800000, utilities: "Có bếp, máy giặt chung" },
+        { title: "Phòng đẹp ở Linh Trung", price: 3100000, utilities: "Có nội thất cơ bản" }
+      ],
+      TanPhu: [
+        { title: "Phòng giá rẻ gần ĐH Công nghiệp Thực phẩm", price: 2600000, utilities: "Có ban công, WC riêng" },
+        { title: "Phòng tiện nghi đường Lũy Bán Bích", price: 2900000, utilities: "Có máy lạnh, chỗ để xe" }
+      ]
+    };
+
+    const mapUrls = {
+      BinhThanh: "https://maps.google.com/maps?q=Binh%20Thanh%20Ho%20Chi%20Minh&t=&z=15&ie=UTF8&iwloc=&output=embed",
+      ThuDuc: "https://maps.google.com/maps?q=Thu%20Duc%20Ho%20Chi%20Minh&t=&z=15&ie=UTF8&iwloc=&output=embed",
+      TanPhu: "https://maps.google.com/maps?q=Tan%20Phu%20Ho%20Chi%20Minh&t=&z=15&ie=UTF8&iwloc=&output=embed"
+    };
+
+    function suggestPrice() {
+      const income = parseInt(document.getElementById("income").value);
+      const location = document.getElementById("location").value;
+      const resultDiv = document.getElementById("result");
+      const listingDiv = document.getElementById("listing");
+      const mapFrame = document.getElementById("map");
+      listingDiv.innerHTML = "";
+
+      if (isNaN(income) || income <= 0) {
+        resultDiv.textContent = "Vui lòng nhập thu nhập hợp lệ.";
+        return;
+      }
+
+      const maxBudget = income * 0.35;
+      const avgPrice = averagePrices[location];
+
+      if (avgPrice <= maxBudget) {
+        resultDiv.textContent = `✅ Khu vực này phù hợp với tài chính của bạn. Giá trung bình: ${avgPrice.toLocaleString()} VNĐ/tháng.`;
+      } else {
+        resultDiv.textContent = `⚠️ Khu vực này có thể vượt ngân sách. Giá trung bình: ${avgPrice.toLocaleString()} VNĐ/tháng. Bạn nên cân nhắc hoặc chọn khu khác.`;
+      }
+
+      mapFrame.src = mapUrls[location];
+
+      const rooms = sampleRooms[location];
+      rooms.forEach(room => {
+        const div = document.createElement("div");
+        div.className = "room-card";
+        div.innerHTML = `
+          <div class="room-title">${room.title}</div>
+          <div class="room-info">Giá: ${room.price.toLocaleString()} VNĐ/tháng</div>
+          <div class="room-info">Tiện ích: ${room.utilities}</div>
+        `;
+        listingDiv.appendChild(div);
+      });
+    }
+  </script>
+</body>
+</html>
